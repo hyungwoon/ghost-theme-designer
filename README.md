@@ -1,69 +1,175 @@
-# Casper
+# Ghost Theme Designer
 
-The default theme for [Ghost](http://github.com/tryghost/ghost/). This is the latest development version of Casper! If you're just looking to download the latest release, head over to the [releases](https://github.com/TryGhost/Casper/releases) page.
+AI-powered Casper Ghost theme design modification agent. Automates CSS/HBS editing, building, and validation for Ghost theme customization.
 
-&nbsp;
+## Overview
 
-![screenshot-desktop](https://user-images.githubusercontent.com/1418797/183329195-8e8f2ee5-a473-4694-a813-a2575491209e.png)
+`ghost-theme-designer` is a specialized Claude Code agent that streamlines the process of modifying the Casper Ghost theme. It handles the entire pipeline:
 
-&nbsp;
+1. **Edit** - Modify CSS (`assets/css/`) and Handlebars templates (`.hbs` files)
+2. **Build** - Compile assets using the Gulp build system
+3. **Validate** - Test with gscan theme validator
+4. **Package** - Create distribution ZIP file
 
-# First time using a Ghost theme?
+## Usage
 
-Ghost uses a simple templating language called [Handlebars](http://handlebarsjs.com/) for its themes.
-
-This theme has lots of code comments to help explain what's going on just by reading the code. Once you feel comfortable with how everything works, we also have full [theme API documentation](https://ghost.org/docs/themes/) which explains every possible Handlebars helper and template.
-
-**The main files are:**
-
-- `default.hbs` - The parent template file, which includes your global header/footer
-- `index.hbs` - The main template to generate a list of posts, usually the home page
-- `post.hbs` - The template used to render individual posts
-- `page.hbs` - Used for individual pages
-- `tag.hbs` - Used for tag archives, eg. "all posts tagged with `news`"
-- `author.hbs` - Used for author archives, eg. "all posts written by Jamie"
-
-One neat trick is that you can also create custom one-off templates by adding the slug of a page to a template file. For example:
-
-- `page-about.hbs` - Custom template for an `/about/` page
-- `tag-news.hbs` - Custom template for `/tag/news/` archive
-- `author-ali.hbs` - Custom template for `/author/ali/` archive
-
-
-# Development
-
-Casper styles are compiled using Gulp/PostCSS to polyfill future CSS spec. You'll need [Node](https://nodejs.org/), [Yarn](https://yarnpkg.com/) and [Gulp](https://gulpjs.com) installed globally. After that, from the theme's root directory:
+Invoke the agent via Claude Code:
 
 ```bash
-# install dependencies
+/ghost-theme-designer
+```
+
+Then describe what you want to modify:
+- "Change the header background color to navy blue"
+- "Make the post cards wider on desktop"
+- "Add a custom footer section"
+- "Modify the dark mode colors"
+
+The agent will automatically handle CSS compilation, template updates, and validation.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- Yarn package manager
+- Ghost CMS (v5.9.0+)
+
+### Installation
+
+```bash
+# Clone and setup
+git clone https://github.com/hyungwoon/ghost-theme-designer.git
+cd ghost-theme-designer
+
+# Install dependencies
 yarn install
 
-# run development server
+# Start development server
 yarn dev
 ```
 
-Now you can edit `/assets/css/` files, which will be compiled to `/assets/built/` automatically.
+## Available Commands
 
-The `zip` Gulp task packages the theme files into `dist/<theme-name>.zip`, which you can then upload to your site.
+| Command | Purpose |
+|---------|---------|
+| `yarn install` | Install dependencies |
+| `yarn dev` | Start dev server with livereload (Gulp watch) |
+| `yarn zip` | Build and package theme to `dist/casper.zip` |
+| `yarn test` | Build and validate with gscan |
+| `yarn test:ci` | Validate with `--fatal --verbose` flags |
 
-```bash
-# create .zip file
-yarn zip
+## Project Structure
+
+```
+casper/
+├── assets/
+│   ├── css/                    # Source CSS (edit here)
+│   │   ├── screen.css         # Main stylesheet
+│   │   ├── global.css         # Reset & typography
+│   │   └── features/          # Feature-specific styles
+│   ├── built/                 # Compiled CSS/JS (auto-generated)
+│   └── js/                    # JavaScript sources
+├── partials/                  # Handlebars components
+│   ├── post-card.hbs         # Post card layout
+│   ├── icons/                # SVG icon partials
+│   └── lightbox.hbs          # Image lightbox
+├── default.hbs               # Base layout template
+├── index.hbs                 # Home page template
+├── post.hbs                  # Single post template
+├── tag.hbs / author.hbs      # Archive pages
+└── package.json              # Build config & custom settings
 ```
 
-# PostCSS Features Used
+## Theme Architecture
 
-- Autoprefixer - Don't worry about writing browser prefixes of any kind, it's all done automatically with support for the latest 2 major versions of every browser.
-- [Color Mod](https://github.com/jonathantneal/postcss-color-mod-function)
+### Base Layout
+`default.hbs` is the root template containing the HTML structure. All pages render their content into its `{{{body}}}` block.
 
+### CSS Grid System
+Posts use a named CSS Grid with three zones:
+- `main` (720px default content width)
+- `wide` (full-width images/cards)
+- `full` (full-bleed sections)
 
-# SVG Icons
+### Custom Settings
+Configured in `package.json` under `config.custom`, accessed in templates via `@custom.*`:
 
-Casper uses inline SVG icons, included via Handlebars partials. You can find all icons inside `/partials/icons`. To use an icon just include the name of the relevant file, eg. To include the SVG icon in `/partials/icons/rss.hbs` - use `{{> "icons/rss"}}`.
+- `navigation_layout` - Logo position (cover/middle/stacked)
+- `title_font` - Heading font family
+- `body_font` - Body font family
+- `color_scheme` - Light/Dark/Auto mode
+- `header_style` - Header alignment (center/left/hidden)
+- `feed_layout` - Post grid type (classic/grid/list)
+- `post_image_style` - Featured image size (wide/full/small/hidden)
+- `email_signup_text` - Post footer CTA
+- `show_recent_posts_footer` - Related posts toggle
 
-You can add your own SVG icons in the same manner.
+### CSS Variables
 
+Key variables in `:root`:
+```css
+--color-darkgrey: #15171A;
+--color-lightgrey: #f1f1f1;
+--ghost-accent-color: /* set by Ghost Admin */
+--gh-font-heading: /* user-selected heading font */
+--gh-font-body: /* user-selected body font */
+```
 
-# Copyright & License
+### Dark Mode
+Three color schemes controlled by `@custom.color_scheme`:
+- **Light** - Default light theme
+- **Dark** - `html.dark-mode` class with dark overrides
+- **Auto** - `html.auto-color` class with `@media (prefers-color-scheme: dark)` media queries
 
-Copyright (c) 2013-2025 Ghost Foundation - Released under the [MIT license](LICENSE).
+## Development Workflow
+
+1. Edit source files in `assets/css/` and template files
+2. HBS template changes trigger livereload automatically
+3. CSS changes compile via PostCSS pipeline
+4. View changes in dev server at `http://localhost:3000`
+5. Run `yarn zip` to package for upload to Ghost
+
+## Build Pipeline
+
+**CSS**: `assets/css/screen.css` → PostCSS (import → color-mod → autoprefixer → cssnano) → `assets/built/screen.css`
+
+**JS**: `assets/js/lib/*.js` + `assets/js/*.js` → concat → uglify → `assets/built/casper.js`
+
+**Note**: Always edit source files in `assets/css/` and `assets/js/`, never edit `assets/built/` directly.
+
+## Customization Examples
+
+### Change Header Color
+Edit `assets/css/screen.css` Section 3 (Site Header):
+```css
+.gh-head {
+  background: var(--gh-accent-color);
+}
+```
+
+### Add Custom Font
+Update `config.custom.title_font` in `package.json`, then in CSS:
+```css
+h1, h2, h3 {
+  font-family: var(--gh-font-heading);
+}
+```
+
+### Modify Post Card Layout
+Edit `partials/post-card.hbs` and adjust CSS in Section 5 (Post Feed).
+
+## Validation
+
+Before deploying, always validate:
+```bash
+yarn test        # Development validation
+yarn test:ci     # CI validation (strict)
+```
+
+This runs gscan to check for Ghost theme compatibility issues.
+
+## License
+
+Based on [Casper](https://github.com/TryGhost/Casper) by Ghost Foundation.
+Copyright (c) 2013-2025 Ghost Foundation - [MIT License](LICENSE)
